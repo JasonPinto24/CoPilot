@@ -1,0 +1,291 @@
+import os
+import time
+from langchain_ollama import ChatOllama
+from src.config import OLLAMA_MODEL, OLLAMA_BASE_URL
+llm = ChatOllama(
+    model=OLLAMA_MODEL,
+    base_url=OLLAMA_BASE_URL,
+    temperature=0.7
+)
+OPTION_C_DIR = "data/raw/option_c"
+TICKETS_FILE = "data/tickets.csv"
+TOPICS = [
+    "vpn-setup",
+    "kafka-troubleshooting",
+    "kubernetes-pods",
+    "onboarding-checklist",
+    "incident-response",
+    "monitoring-setup",
+    "database-backup",
+    "api-rate-limits",
+    "security-scanning",
+    "slack-channels",
+    "aws-access",
+    "github-workflow",
+    "docker-registry",
+    "on-call-rotation",
+    "data-retention",
+    "ldap-setup",
+    "code-review-standards",
+    "postmortem-template",
+    "offboarding",
+    "deployment-policy",
+]
+# function for generating data
+def generate_sop(topic):
+    print(f"Generating SOP: {topic}...")
+
+    prompt = f"""You are writing an internal technical document for Northwind Systems, 
+a mid-sized IT services company with 2000 employees.
+
+Write a detailed internal SOP (Standard Operating Procedure) for: {topic}
+
+Rules:
+- Use markdown formatting with headers
+- Invent specific Northwind details - tool names, URLs, team names, procedures
+- Make it realistic and detailed - 400 to 600 words
+- Include: Overview, Prerequisites, Step by step instructions, Troubleshooting
+- Use specific examples like internal URLs, tool names, contact details
+- Do NOT use generic placeholders like [insert name here]
+- Write as if this is a real internal document employees will follow
+
+Start writing the document now:"""
+
+    response = llm.invoke(prompt)
+    content = response.content
+
+    # Save to file
+    filename = f"{OPTION_C_DIR}/{topic}.md"
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    print(f"  Saved: {filename}")
+    return content
+
+# function to generate support tickets(hardcoded)
+def generate_tickets():
+    print("Generating support tickets...")
+
+    header = "id,title,description,status,priority,resolution,created_at\n"
+
+    tickets = [
+        # ── Kafka tickets (including 4 deliberate duplicates) ──
+        "1001,Payment Service Kafka Consumer Lag,Consumer group falling behind by 50000 messages on payment-service topic,Resolved,Critical,Increased consumer group partition count from 3 to 9,2024-01-15",
+        "1002,Kafka Offset Reset Needed,Consumer group offsets are out of sync on orders topic,Resolved,High,Reset offsets using kafka-consumer-groups reset-offsets command,2024-01-20",
+        "1003,Kafka Broker Down,One of three Kafka brokers went offline causing replication lag,Resolved,Critical,Restarted broker service and verified ISR count returned to 3,2024-01-25",
+        "1004,Consumer Group Lag on Payment Topic,Backend engineer reports payment-service Kafka consumer not keeping up,Resolved,Critical,Increased consumer group partition count from 3 to 9,2024-03-20",
+        "1005,Kafka Topic Partition Imbalance,Partitions unevenly distributed across brokers causing hotspots,Resolved,High,Ran kafka-reassign-partitions to rebalance across all brokers,2024-02-10",
+        "1006,Kafka Producer Timeout,Producer timing out when sending to inventory topic under high load,Resolved,High,Increased producer timeout and batch size in application config,2024-02-15",
+        "1007,Kafka Consumer Lag Payment Service,New engineer reports same lag issue on payment-service Kafka topic,Resolved,Critical,Increased consumer group partition count from 3 to 9,2024-06-10",
+        "1008,Kafka Schema Registry Down,Schema registry unavailable causing producer serialization failures,Resolved,Critical,Restarted schema registry service and verified health endpoint,2024-03-01",
+        "1009,Kafka Connect Sink Failing,Kafka Connect sink connector dropping messages to database,Resolved,High,Fixed connector config and restarted with increased task count,2024-03-10",
+        "1010,Payment Kafka Consumer Behind Again,Another report of consumer group lag on payment-service topic,Resolved,Critical,Increased consumer group partition count from 3 to 9,2024-09-05",
+        # ── Kubernetes tickets ──
+        "1011,Pod OOM Killed,Multiple pods in production namespace being OOM killed,Resolved,Critical,Increased memory limits in deployment spec from 512Mi to 1Gi,2024-01-18",
+        "1012,Deployment Rollout Stuck,Deployment rollout stuck at 50 percent with pods in pending state,Resolved,High,Found node resource exhaustion and scaled up node pool by 2 nodes,2024-01-22",
+        "1013,Pod CrashLoopBackOff Auth Service,Auth service pods in CrashLoopBackOff after config change,Resolved,Critical,Rolled back configmap change that had invalid JWT secret format,2024-02-05",
+        "1014,Kubernetes Node NotReady,One worker node showing NotReady status in cluster,Resolved,High,Drained node restarted kubelet service and returned node to Ready,2024-02-12",
+        "1015,Liveness Probe Failing,Liveness probes failing on API gateway pods causing restarts,Resolved,Medium,Increased initialDelaySeconds from 10 to 30 in pod spec,2024-02-20",
+        "1016,PVC Stuck in Pending,PersistentVolumeClaim stuck in pending state for database pod,Resolved,High,Created missing StorageClass and reapplied PVC manifest,2024-03-05",
+        "1017,Kubernetes Dashboard Access,Team unable to access Kubernetes dashboard after certificate renewal,Resolved,Medium,Updated dashboard service account token and regenerated kubeconfig,2024-03-15",
+        "1018,Pod Eviction During Node Pressure,Pods being evicted during disk pressure on worker nodes,Resolved,High,Cleaned up unused images and volumes freeing 40GB disk space,2024-03-25",
+        "1019,HorizontalPodAutoscaler Not Scaling,HPA not scaling up pods despite high CPU metrics,Resolved,High,Fixed metrics-server deployment that had crashed due to OOM,2024-04-02",
+        "1020,Ingress 502 Bad Gateway,Nginx ingress returning 502 for all requests after upgrade,Resolved,Critical,Rolled back ingress controller to previous version 1.6.4,2024-04-10",
+        # ── VPN tickets ──
+        "1021,VPN Connection Drops Frequently,Multiple engineers reporting VPN dropping every 30 minutes,Resolved,High,Updated GlobalProtect client to 6.1 and adjusted keepalive settings,2024-01-16",
+        "1022,VPN Authentication Failure,Users unable to authenticate to VPN after AD password change,Resolved,High,Cleared cached credentials and re-enrolled MFA for affected users,2024-01-30",
+        "1023,VPN Split Tunnel Not Working,Split tunnel configuration not routing internal traffic correctly,Resolved,Medium,Updated split tunnel config to include 10.0.0.0/8 subnet,2024-02-08",
+        "1024,New Joiner VPN Access,New engineer cannot connect to VPN on first day,Resolved,Medium,Provisioned VPN profile and sent enrollment link via email,2024-02-18",
+        "1025,VPN Slow Performance,Engineers on VPN reporting slow access to internal services,Resolved,Medium,Moved VPN gateway to eu-west-2 region closer to majority of users,2024-02-28",
+        "1026,VPN Certificate Expired,VPN certificates expired causing all connections to fail,Resolved,Critical,Renewed certificates and pushed updated profile to all endpoints,2024-03-08",
+        "1027,VPN Two Factor Not Prompting,MFA not prompting during VPN login after policy change,Resolved,High,Fixed RADIUS policy configuration to enforce MFA for all users,2024-03-18",
+        "1028,VPN Access for Contractor,External contractor needs temporary VPN access for project,Resolved,Low,Created limited VPN profile with 30 day expiry and project subnet access,2024-03-28",
+        "1029,VPN Gateway Unreachable,VPN gateway showing as unreachable from office network,Resolved,Critical,Restarted gateway service and updated firewall rules on perimeter,2024-04-08",
+        "1030,VPN Routing Issue After Office Move,Engineers at new office cannot reach internal services over VPN,Resolved,High,Added new office subnet 192.168.5.0/24 to VPN routing table,2024-04-18",
+        # ── AWS tickets ──
+        "1031,S3 Bucket Access Denied,Application cannot access S3 bucket after IAM policy update,Resolved,High,Added missing s3:GetObject permission to application IAM role,2024-01-17",
+        "1032,EC2 Instance High CPU,Production EC2 instance running at 100 percent CPU for 2 hours,Resolved,Critical,Identified runaway process and restarted application service,2024-01-27",
+        "1033,RDS Connection Pool Exhausted,Application throwing connection pool exhausted errors on RDS,Resolved,Critical,Increased max_connections and implemented connection pooling with PgBouncer,2024-02-06",
+        "1034,AWS Lambda Timeout,Lambda function timing out on large payload processing,Resolved,High,Increased Lambda timeout from 30s to 5 minutes and memory to 1GB,2024-02-16",
+        "1035,CloudWatch Alarms Not Triggering,Critical CPU alarms not triggering despite high utilization,Resolved,High,Fixed alarm thresholds that were accidentally set to 100 percent,2024-02-26",
+        "1036,EKS Node Group Scaling Failed,EKS node group failed to scale up during traffic spike,Resolved,Critical,Fixed IAM permissions for cluster autoscaler service account,2024-03-06",
+        "1037,AWS Cost Spike Investigation,Unexpected 300 percent cost increase in AWS bill this month,Resolved,High,Found undeleted NAT gateway costing 200 dollars per day and removed it,2024-03-16",
+        "1038,Route53 DNS Not Resolving,New subdomain not resolving after Route53 record creation,Resolved,Medium,Fixed missing period at end of CNAME record value causing invalid entry,2024-03-26",
+        "1039,SQS Queue Backlog,SQS queue backlog growing to 1 million messages unprocessed,Resolved,Critical,Scaled up consumer Lambda concurrency from 10 to 100,2024-04-05",
+        "1040,ECR Image Pull Error,EKS pods failing to pull images from private ECR repository,Resolved,High,Attached ECR pull policy to EC2 node instance profile,2024-04-15",
+        # ── Docker tickets ──
+        "1041,Docker Image Build Failing,CI pipeline failing on Docker image build step,Resolved,High,Fixed base image FROM python:3.11 that changed breaking dependencies,2024-01-19",
+        "1042,Docker Container Exiting Immediately,Container starts and exits with code 1 in production,Resolved,High,Found missing environment variable DATABASE_URL in container spec,2024-01-29",
+        "1043,Docker Compose Network Issue,Services in docker-compose cannot communicate with each other,Resolved,Medium,Added explicit network definition and service aliases to compose file,2024-02-09",
+        "1044,Docker Volume Permission Denied,Container getting permission denied when writing to mounted volume,Resolved,Medium,Fixed volume mount with correct uid 1000 using user directive in Dockerfile,2024-02-19",
+        "1045,Docker Registry Push Failing,Engineers unable to push images to internal Docker registry,Resolved,High,Renewed registry TLS certificate that had expired,2024-03-01",
+        "1046,Docker Compose Production Parity,Production Docker config differs from local causing bugs,Resolved,Medium,Created docker-compose.prod.yml and documented differences,2024-03-11",
+        "1047,Large Docker Image Size,Docker image size 4GB causing slow deployments and pulls,Resolved,Medium,Rewrote Dockerfile with multi-stage build reducing size to 400MB,2024-03-21",
+        "1048,Docker Health Check Failing,Container health check failing causing orchestrator to restart pod,Resolved,Medium,Fixed health check endpoint to return 200 instead of redirect,2024-04-01",
+        "1049,Docker Daemon Not Starting,Docker daemon not starting after server reboot,Resolved,High,Fixed corrupted containerd state by clearing var lib containerd,2024-04-11",
+        "1050,Docker Network Bridge Conflict,Docker bridge network conflicting with office VPN subnet,Resolved,Medium,Changed Docker default bridge to 172.20.0.0/16 to avoid VPN conflict,2024-04-21",
+        # ── Database tickets ──
+        "1051,PostgreSQL Slow Queries,Multiple slow queries causing timeout errors in application,Resolved,High,Added composite index on user_id and created_at columns,2024-01-21",
+        "1052,Database Disk Space Critical,Production database disk at 95 percent capacity,Resolved,Critical,Archived 2 years of old logs and expanded EBS volume by 500GB,2024-01-31",
+        "1053,Database Backup Failing,Nightly database backup job failing for 3 days,Resolved,High,Fixed S3 permissions for backup IAM role and verified backup completed,2024-02-11",
+        "1054,MySQL Replication Lag,MySQL replica falling 2 hours behind primary database,Resolved,High,Identified large transaction causing lag and split into smaller batches,2024-02-21",
+        "1055,Database Connection Refused,Application cannot connect to database after maintenance window,Resolved,Critical,Found pg_hba.conf reverted during update blocking app server IP range,2024-03-03",
+        "1056,Deadlock on Orders Table,Frequent deadlocks on orders table causing transaction failures,Resolved,High,Reordered lock acquisition in application code to prevent circular waits,2024-03-13",
+        "1057,Database Schema Migration Failed,Flyway migration failed leaving schema in inconsistent state,Resolved,Critical,Rolled back to previous version repaired schema and reran migration,2024-03-23",
+        "1058,Slow Full Table Scan,Query doing full table scan on 50 million row events table,Resolved,High,Added partial index on status column for active events only,2024-04-03",
+        "1059,Database Password Rotation Failed,Automated password rotation broke application database connection,Resolved,Critical,Updated database credentials in AWS Secrets Manager and restarted app,2024-04-13",
+        "1060,Read Replica Returning Stale Data,Application reading stale data from read replica up to 5 minutes old,Resolved,Medium,Routed time-sensitive queries to primary and increased sync frequency,2024-04-23",
+        # ── Monitoring tickets ──
+        "1061,Grafana Dashboard Not Loading,Grafana showing blank dashboards after upgrade,Resolved,High,Fixed datasource URL that changed after Prometheus port update,2024-01-23",
+        "1062,Prometheus Scrape Failing,Prometheus not scraping metrics from payment service,Resolved,High,Added missing scrape config and service monitor for payment namespace,2024-02-03",
+        "1063,Alert Manager Not Sending Emails,Critical alerts not being emailed to on-call engineer,Resolved,Critical,Fixed SMTP password rotation that broke alertmanager email config,2024-02-13",
+        "1064,Disk Space Alert False Positive,Disk space alerts firing on nodes with plenty of space available,Resolved,Medium,Fixed alert query that was not filtering by correct filesystem mount,2024-02-23",
+        "1065,Metrics Missing After Node Restart,Node metrics disappearing from Grafana after node restart,Resolved,Medium,Fixed node-exporter daemonset that was not restarting after node reboot,2024-03-04",
+        "1066,Log Aggregation Delay,Logs appearing in Elasticsearch 30 minutes late,Resolved,High,Increased Fluentd buffer size and flush interval configuration,2024-03-14",
+        "1067,Kibana Search Not Working,Kibana search returning no results despite logs being present,Resolved,High,Rebuilt Elasticsearch index mapping that had become corrupted,2024-03-24",
+        "1068,PagerDuty Integration Broken,PagerDuty not receiving alerts from alertmanager,Resolved,Critical,Updated PagerDuty routing key after service key rotation,2024-04-04",
+        "1069,Datadog Agent High CPU,Datadog agent consuming 30 percent CPU on production nodes,Resolved,High,Excluded high cardinality custom metrics causing excessive processing,2024-04-14",
+        "1070,Uptime Monitor False Alerts,Uptime monitor showing service down during deployments,Resolved,Medium,Added grace period of 60 seconds during deployment rollouts,2024-04-24",
+        # ── Security tickets ──
+        "1071,SSL Certificate Expiring,SSL certificate for api.northwind.io expiring in 3 days,Resolved,Critical,Renewed certificate via Lets Encrypt and deployed to load balancer,2024-01-24",
+        "1072,Dependency Vulnerability Found,Critical CVE found in log4j dependency version,Resolved,Critical,Updated log4j to 2.17.1 across all services and deployed,2024-02-04",
+        "1073,Unauthorized API Access Attempt,Repeated 401 errors from unknown IP attempting API access,Resolved,High,Blocked IP range in WAF and enabled geo-restriction for suspicious regions,2024-02-14",
+        "1074,Secret Leaked in Git History,AWS access key accidentally committed to GitHub repository,Resolved,Critical,Rotated exposed key immediately and removed from git history with BFG,2024-02-24",
+        "1075,OWASP Scan High Severity Finding,Penetration test found SQL injection vulnerability in search API,Resolved,Critical,Fixed query parameterization in search endpoint and reran scan,2024-03-06",
+        "1076,MFA Bypass Reported,User reported being able to login without MFA prompt,Resolved,Critical,Fixed auth middleware that was skipping MFA check for specific user agents,2024-03-16",
+        "1077,Data Encryption Not Applied,Found database column storing PII without encryption at rest,Resolved,High,Enabled column-level encryption and migrated existing data,2024-03-26",
+        "1078,Trivy Scan Blocking CI Pipeline,Trivy container scan blocking deployments on high severity issues,Resolved,Medium,Updated base images to eliminate known vulnerabilities and whitelisted accepted risks,2024-04-06",
+        "1079,Failed Login Spike Detected,1000 failed logins in 10 minutes detected by SIEM,Resolved,Critical,Identified and blocked credential stuffing attack at WAF layer,2024-04-16",
+        "1080,API Key Not Rotating,Application API key not been rotated in over 12 months,Resolved,Medium,Implemented automated key rotation via AWS Secrets Manager,2024-04-26",
+        # ── Networking tickets ──
+        "1081,Internal DNS Resolution Failing,Services unable to resolve internal hostnames intermittently,Resolved,Critical,Fixed CoreDNS configmap that had incorrect upstream resolver,2024-01-26",
+        "1082,Load Balancer Health Check Failing,ALB health checks failing causing backend removal,Resolved,High,Fixed health check path from slash to /health endpoint,2024-02-07",
+        "1083,Network Latency Spike,Latency between microservices spiking to 500ms,Resolved,High,Found misconfigured service mesh retry policy causing request amplification,2024-02-17",
+        "1084,Firewall Blocking Internal Traffic,New firewall rule blocking communication between services,Resolved,Critical,Reverted incorrect deny rule that blocked port 8080 internal traffic,2024-02-27",
+        "1085,Service Mesh Certificate Rotation,Istio certificates expired causing mTLS failures between services,Resolved,Critical,Forced certificate rotation using istioctl and verified all services healthy,2024-03-09",
+        "1086,BGP Route Advertisement Issue,On-premises to cloud BGP route not being advertised,Resolved,High,Fixed BGP configuration on transit gateway and verified route propagation,2024-03-19",
+        "1087,CDN Cache Not Invalidating,CloudFront cache serving stale content after deployment,Resolved,Medium,Created invalidation for affected paths and adjusted cache TTL to 5 minutes,2024-03-29",
+        "1088,CORS Error Blocking Frontend,Frontend receiving CORS errors from API after domain change,Resolved,High,Added new frontend domain to allowed origins list in API gateway,2024-04-09",
+        "1089,Network Policy Blocking Pod Communication,Kubernetes network policy blocking required service communication,Resolved,High,Added egress rule allowing payment service to reach database namespace,2024-04-19",
+        "1090,Proxy Configuration Invalid,Corporate proxy blocking package downloads in CI pipeline,Resolved,Medium,Added proxy bypass rule for internal artifact registry domain,2024-04-29",
+        # ── CI/CD tickets ──
+        "1091,Jenkins Pipeline Failing,Jenkins build pipeline failing on unit test stage,Resolved,High,Fixed flaky test that depended on system time causing intermittent failure,2024-01-28",
+        "1092,GitHub Actions Workflow Timeout,GitHub Actions deployment workflow timing out after 30 minutes,Resolved,Medium,Optimized Docker layer caching reducing build time from 35 to 8 minutes,2024-02-08",
+        "1093,Artifact Upload Failing,Build artifacts not uploading to Nexus repository,Resolved,High,Fixed Nexus credentials rotation that broke pipeline authentication,2024-02-18",
+        "1094,Deployment Rollback Not Working,Automated rollback not triggering after failed health check,Resolved,Critical,Fixed rollback script that had wrong deployment name after service rename,2024-02-28",
+        "1095,Code Coverage Dropping,Code coverage below required 80 percent threshold blocking merge,Resolved,Medium,Added missing unit tests for payment calculation module,2024-03-10",
+        "1096,SonarQube Quality Gate Failing,SonarQube blocking deployment due to security hotspots,Resolved,Medium,Reviewed and resolved 12 security hotspots found in authentication module,2024-03-20",
+        "1097,Helm Chart Deployment Failing,Helm chart upgrade failing with immutable field error,Resolved,High,Deleted and recreated deployment as Helm 3 does not support field mutation,2024-03-30",
+        "1098,ArgoCD Sync Failing,ArgoCD out of sync after manual kubectl change to production,Resolved,Medium,Reverted manual change and let ArgoCD reconcile to git desired state,2024-04-10",
+        "1099,Pipeline Running on Wrong Branch,CI pipeline triggered on wrong branch deploying incorrect version,Resolved,High,Fixed branch filter in pipeline trigger configuration,2024-04-20",
+        "1100,Secrets Not Available in Pipeline,Pipeline failing because secrets not injected into build environment,Resolved,High,Granted pipeline service account access to Vault secret path,2024-04-30",
+        # ── LDAP and access tickets ──
+        "1101,LDAP Authentication Failing,Engineers unable to login to internal tools after LDAP change,Resolved,Critical,Updated LDAP bind DN and password in all service configurations,2024-01-30",
+        "1102,User Account Locked Out,Engineer locked out of all systems after too many failed attempts,Resolved,Medium,Unlocked account in Active Directory and reset password,2024-02-10",
+        "1103,New User Provisioning Failed,New joiner accounts not created in internal systems,Resolved,High,Fixed HR system integration that had stopped triggering provisioning,2024-02-20",
+        "1104,Group Permission Missing,Development team missing permission to access staging environment,Resolved,Medium,Added dev team AD group to staging access policy,2024-03-02",
+        "1105,Service Account Password Expired,Automated service account password expired breaking integrations,Resolved,Critical,Reset password and configured service account for non-expiring password,2024-03-12",
+        "1106,SSO Not Working for New App,Single sign on not working for newly deployed internal application,Resolved,High,Registered application in Okta and configured SAML assertion mapping,2024-03-22",
+        "1107,Offboarding Access Not Revoked,Former employee access not fully revoked after departure,Resolved,Critical,Completed access revocation across all systems and audited access log,2024-04-02",
+        "1108,Privileged Access Request Delayed,Engineer waiting 3 days for production access approval,Resolved,Medium,Expedited approval and documented process for emergency access requests,2024-04-12",
+        "1109,API Key Belonging to Departed Employee,Production API key still active belonging to engineer who left,Resolved,Critical,Rotated API key and transferred ownership to current team lead,2024-04-22",
+        "1110,Role Based Access Not Applied,RBAC roles not applied correctly after Kubernetes upgrade,Resolved,High,Reapplied ClusterRoleBinding manifests that were removed during upgrade,2024-05-02",
+        # ── Incident response tickets ──
+        "1111,Production Outage Payment Service,Payment service completely down affecting all transactions,Resolved,Critical,Identified and rolled back bad database migration causing connection exhaustion,2024-02-01",
+        "1112,Data Pipeline Stopped Processing,ETL pipeline stopped processing events for 6 hours,Resolved,Critical,Restarted Spark streaming job that had silently failed due to OOM,2024-02-11",
+        "1113,API Response Time Degraded,API response times increased 10x affecting user experience,Resolved,Critical,Found N plus 1 query bug introduced in last release and hotfixed,2024-02-21",
+        "1114,Third Party Integration Down,Payment gateway integration failing causing checkout errors,Resolved,Critical,Switched to backup payment provider while primary vendor resolved issue,2024-03-03",
+        "1115,Memory Leak in Production,Application memory growing unbounded causing periodic OOM kills,Resolved,Critical,Identified and fixed memory leak in connection pool not releasing resources,2024-03-13",
+        "1116,Cascading Failure Across Services,One service failure causing cascading timeouts across platform,Resolved,Critical,Implemented circuit breaker pattern to isolate failing service,2024-03-23",
+        "1117,Data Corruption Detected,Inconsistent data detected in orders database after migration,Resolved,Critical,Restored from backup 2 hours before migration and reran with fixes,2024-04-03",
+        "1118,Scheduled Job Not Running,Critical daily report job not running for past week,Resolved,High,Fixed cron expression that had wrong timezone causing job to skip,2024-04-13",
+        "1119,SSL Termination Failing,SSL termination failing at load balancer after certificate update,Resolved,Critical,Fixed certificate chain order in PEM file uploaded to load balancer,2024-04-23",
+        "1120,Service Discovery Broken,Services unable to discover each other after cluster restart,Resolved,Critical,Restarted Consul service discovery cluster and verified all services registered,2024-05-03",
+        # ── Remaining mixed tickets ──
+        "1121,On Call Handover Not Documented,On-call engineer did not document incidents during shift,Resolved,Medium,Updated on-call runbook with mandatory handover checklist,2024-02-03",
+        "1122,Postmortem Not Completed,Production incident postmortem overdue by 2 weeks,Resolved,Low,Completed postmortem document and shared with engineering team,2024-02-13",
+        "1123,Runbook Outdated,Runbook for database restore pointing to deprecated tool,Resolved,Medium,Updated runbook with current restore procedure and tested end to end,2024-02-23",
+        "1124,Alert Runbook Missing,Alert firing with no runbook link causing delayed response,Resolved,Medium,Created runbook for disk space alert and linked in alertmanager config,2024-03-05",
+        "1125,Slack Integration Broken,Incident alerts not posting to Slack channel,Resolved,High,Regenerated Slack webhook URL after workspace settings change,2024-03-15",
+        "1126,GitHub Repository Access,New engineer cannot access source code repositories,Resolved,Medium,Added engineer to GitHub organization and correct team,2024-03-25",
+        "1127,Code Review SLA Missed,Pull requests waiting more than 5 days for code review,Resolved,Low,Implemented PR reminder bot to notify reviewers after 24 hours,2024-04-05",
+        "1128,Local Development Environment Broken,New joiner cannot set up local development environment,Resolved,Medium,Updated getting started guide with missing Docker Desktop prerequisite,2024-04-15",
+        "1129,API Documentation Outdated,Swagger docs not matching actual API behavior causing confusion,Resolved,Low,Updated OpenAPI spec and enabled auto-generation from code annotations,2024-04-25",
+        "1130,Test Environment Data Refresh,Test environment running with 6 month old data causing test failures,Resolved,Medium,Refreshed test environment with anonymized production data snapshot,2024-05-05",
+        "1131,Backup Restore Not Tested,Monthly backup restore test not performed for 3 months,Resolved,High,Performed restore test successfully and scheduled monthly automated test,2024-02-05",
+        "1132,Capacity Planning Needed,Production cluster approaching 80 percent capacity,Resolved,High,Completed capacity analysis and submitted request for additional nodes,2024-02-15",
+        "1133,Dependency Update Overdue,Multiple dependencies with known vulnerabilities not updated,Resolved,Medium,Updated all dependencies with known CVEs and added dependency scanning to CI,2024-02-25",
+        "1134,API Rate Limit Too Restrictive,Engineers hitting API rate limits during performance testing,Resolved,Medium,Increased rate limit for internal IP range in API gateway config,2024-03-07",
+        "1135,Log Retention Policy Missing,Application logs being deleted after 3 days causing audit issues,Resolved,High,Set CloudWatch log retention to 90 days per compliance requirement,2024-03-17",
+        "1136,Performance Test Environment Missing,No environment available for load testing new features,Resolved,Medium,Provisioned dedicated performance test environment with production-like config,2024-03-27",
+        "1137,Docker Hub Rate Limiting,CI builds failing due to Docker Hub pull rate limits,Resolved,High,Mirrored required base images to internal ECR registry,2024-04-07",
+        "1138,Kubernetes Upgrade Needed,Cluster running deprecated version losing vendor support,Resolved,High,Upgraded cluster from 1.24 to 1.27 with zero downtime using rolling upgrade,2024-04-17",
+        "1139,API Versioning Needed,Breaking API changes causing client failures,Resolved,High,Implemented API versioning with v1 and v2 routes and deprecation notices,2024-04-27",
+        "1140,Feature Flag Stuck Enabled,Feature flag not disabling properly causing unwanted feature exposure,Resolved,Medium,Fixed LaunchDarkly SDK initialization that was caching stale flag values,2024-05-07",
+        # ── Open tickets (no resolution) ──
+        "1141,Kafka Consumer Lag on Analytics Service,Analytics service consumer group falling behind on events topic,Open,High,,2024-05-10",
+        "1142,Kubernetes StatefulSet Not Scaling,StatefulSet for cache service not scaling beyond 3 replicas,Open,High,,2024-05-12",
+        "1143,VPN Performance Degraded for Remote Users,Remote engineers in Asia reporting very slow VPN speeds,Open,Medium,,2024-05-14",
+        "1144,AWS Cost Anomaly Detected,Unexpected cost spike in EC2 billing this week,Open,High,,2024-05-16",
+        "1145,Database Query Regression,New release introduced slow query on product search,Open,Critical,,2024-05-18",
+        "1146,Docker Image Vulnerability,Critical CVE detected in production Docker base image,Open,Critical,,2024-05-20",
+        "1147,Monitoring Gap Identified,No metrics collected from payment service worker pods,Open,Medium,,2024-05-22",
+        "1148,SSL Certificate Renewal Needed,api-internal.northwind.io certificate expiring in 14 days,Open,High,,2024-05-24",
+        "1149,New Service Deployment Failing,New recommendation service failing to deploy to production,Open,High,,2024-05-26",
+        "1150,Log Ingestion Stopped,Logs from auth service not appearing in Kibana,Open,Medium,,2024-05-28",
+        "1151,Autoscaling Not Triggering,HPA not scaling up search service despite queue backlog,Open,High,,2024-05-30",
+        "1152,CDN Purge Not Working,CDN cache not purging after content update,Open,Medium,,2024-06-01",
+        "1153,Pipeline Flaky Tests,CI pipeline failing 30 percent of runs due to flaky tests,Open,Medium,,2024-06-03",
+        "1154,Kubernetes Upgrade Compatibility,Planning upgrade to 1.28 but need compatibility check,Open,Low,,2024-06-05",
+        "1155,Runbook Review Needed,Several runbooks not reviewed in over 6 months,Open,Low,,2024-06-07",
+        "1156,Access Audit Overdue,Quarterly access review overdue by 3 weeks,Open,Medium,,2024-06-09",
+        "1157,Performance Baseline Missing,No performance baseline established for new checkout service,Open,Medium,,2024-06-11",
+        "1158,Dependency Audit Needed,Full dependency audit not performed this quarter,Open,Low,,2024-06-13",
+        "1159,Disaster Recovery Test Overdue,DR test not performed in 6 months per compliance requirement,Open,High,,2024-06-15",
+        "1160,Documentation Sprint Needed,Multiple services missing architecture documentation,Open,Low,,2024-06-17",
+    ]
+
+    with open(TICKETS_FILE, "w", encoding="utf-8") as f:
+        f.write(header)
+        for ticket in tickets:
+            f.write(ticket + "\n")
+
+    print(f"  Saved {len(tickets)} tickets to: {TICKETS_FILE}")
+# ── Function 3: Main runner
+def main():
+    print("=== Northwind Systems Corpus Generator ===")
+    print()
+
+    # Create output folders if they don't exist
+    os.makedirs(OPTION_C_DIR, exist_ok=True)
+    os.makedirs("data", exist_ok=True)
+
+    # Generate all 20 SOPs
+    print(f"Generating {len(TOPICS)} SOP documents...")
+    print()
+    for i, topic in enumerate(TOPICS, 1):
+        print(f"[{i}/{len(TOPICS)}]", end=" ")
+        generate_sop(topic)
+        time.sleep(1)  # small pause between calls
+
+    print()
+    print("All SOPs generated.")
+    print()
+
+    # Generate support tickets
+    generate_tickets()
+
+    print()
+    print("=== Corpus generation complete ===")
+    print(f"SOPs saved to: {OPTION_C_DIR}/")
+    print(f"Tickets saved to: {TICKETS_FILE}")
+    print()
+    print("Files generated:")
+    for topic in TOPICS:
+        print(f"  data/raw/option_c/{topic}.md")
+    print(f"  data/tickets.csv")
+
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    main()
