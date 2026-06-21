@@ -1,0 +1,158 @@
+[
+  {
+    "question": "How do I set up VPN at Northwind?",
+    "answer": "Download FortiClient VPN client and connect using your employee ID and password",
+    "relevant_sources": ["vpn-setup.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is Kafka consumer group lag and how do I fix it?",
+    "answer": "Consumer group lag occurs when consumers fall behind producers. Fix by increasing partition count or adding more consumers",
+    "relevant_sources": ["kafka-consumers.md", "kafka-introduction.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "How do I debug a pod that is in CrashLoopBackOff?",
+    "answer": "Use kubectl describe pod and kubectl logs to identify the crash reason then fix the underlying issue",
+    "relevant_sources": ["kubernetes-debugging.md", "kubernetes-pods.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is the Northwind onboarding checklist for new engineers?",
+    "answer": "Complete account setup, VPN configuration, access requests, and introductory meetings in the first week",
+    "relevant_sources": ["onboarding-checklist.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "How do I write a Dockerfile for a Python application?",
+    "answer": "Use FROM python base image, COPY requirements, RUN pip install, COPY source code, and define CMD",
+    "relevant_sources": ["docker-dockerfile.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is the Northwind incident response procedure?",
+    "answer": "Identify the incident, escalate to on-call, communicate status, resolve, and write a postmortem",
+    "relevant_sources": ["incident-response.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "How do I create a FastAPI endpoint?",
+    "answer": "Import FastAPI, create an app instance, use decorators like @app.get or @app.post to define endpoints",
+    "relevant_sources": ["fastapi-tutorial.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "How do I set up monitoring at Northwind?",
+    "answer": "Use Grafana dashboards connected to Prometheus metrics with alerting configured for critical thresholds",
+    "relevant_sources": ["monitoring-setup.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is the Northwind database backup procedure?",
+    "answer": "Run nightly automated backups to S3, verify integrity, and test restore monthly",
+    "relevant_sources": ["database-backup.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "How do I configure Python logging?",
+    "answer": "Use the logging module with basicConfig or a logger instance to set level, format and handlers",
+    "relevant_sources": ["python-logging.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is a Kubernetes deployment and how do I create one?",
+    "answer": "A deployment manages replica sets and pod updates. Create using kubectl apply with a deployment manifest",
+    "relevant_sources": ["kubernetes-deployments.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "How do I handle exceptions in Python?",
+    "answer": "Use try except blocks to catch exceptions, finally for cleanup, and raise to re-raise exceptions",
+    "relevant_sources": ["python-exceptions.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is Docker Compose and how do I use it?",
+    "answer": "Docker Compose defines multi-container applications in a YAML file and starts them with docker-compose up",
+    "relevant_sources": ["docker-compose.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is the Northwind code review standard?",
+    "answer": "All code must be reviewed by at least one senior engineer before merging with automated tests passing",
+    "relevant_sources": ["code-review-standards.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "How do I request AWS access at Northwind?",
+    "answer": "Submit an access request through the internal portal with your manager approval and intended use case",
+    "relevant_sources": ["aws-access.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is the Northwind on-call rotation policy?",
+    "answer": "Engineers rotate weekly on-call duty with a primary and secondary responder for each shift",
+    "relevant_sources": ["on-call-rotation.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "How do I set up LDAP authentication at Northwind?",
+    "answer": "Configure the LDAP client with the Northwind directory server URL and bind credentials",
+    "relevant_sources": ["ldap-setup.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is the Northwind data retention policy?",
+    "answer": "Logs are retained for 90 days, user data for 7 years per compliance requirements",
+    "relevant_sources": ["data-retention.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "How do I write a postmortem at Northwind?",
+    "answer": "Document the timeline, root cause, impact, resolution steps, and action items to prevent recurrence",
+    "relevant_sources": ["postmortem-template.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "What is the Northwind GitHub workflow?",
+    "answer": "Use feature branches, open pull requests to dev, get one reviewer approval, then merge",
+    "relevant_sources": ["github-workflow.md"],
+    "type": "answerable"
+  },
+  {
+    "question": "Has anyone seen Kafka consumer lag on the payment service before?",
+    "answer": "Yes - resolved by increasing consumer group partition count from 3 to 9",
+    "relevant_sources": ["ticket:1001", "ticket:1004", "ticket:1007", "ticket:1010"],
+    "type": "ticket"
+  },
+  {
+    "question": "Has anyone had VPN connection issues at Northwind?",
+    "answer": "Yes - resolved by upgrading GlobalProtect client and adjusting keepalive settings",
+    "relevant_sources": ["ticket:1021", "ticket:1026"],
+    "type": "ticket"
+  },
+  {
+    "question": "Has anyone seen pod OOM killed errors in production?",
+    "answer": "Yes - resolved by increasing memory limits in deployment spec from 512Mi to 1Gi",
+    "relevant_sources": ["ticket:1011"],
+    "type": "ticket"
+  },
+  {
+    "question": "What is Northwind's deployment policy for the Singapore region?",
+    "answer": "",
+    "relevant_sources": [],
+    "type": "gap"
+  },
+  {
+    "question": "What is the Northwind office wifi password?",
+    "answer": "",
+    "relevant_sources": [],
+    "type": "gap"
+  },
+  {
+    "question": "What is the CEO's email address at Northwind?",
+    "answer": "",
+    "relevant_sources": [],
+    "type": "gap"
+  }
+]
