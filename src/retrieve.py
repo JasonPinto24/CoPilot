@@ -24,13 +24,12 @@ def retrieve(query: str, k: int = None) -> list:
     client = get_qdrant_client()
 
     # Search for top-k most similar vectors
-    results = client.search(
+    results = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=query_vector,
+        query=query_vector,
         limit=k,
         with_payload=True,
-    )
-
+    ).points
     # Format results into hits list
     hits = []
     for result in results:
