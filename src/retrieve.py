@@ -30,6 +30,7 @@ def retrieve(query: str, k: int = None) -> list:
         limit=k,
         with_payload=True,
     ).points
+
     # Format results into hits list
     hits = []
     for result in results:
