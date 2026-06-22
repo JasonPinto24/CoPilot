@@ -5,13 +5,13 @@ from langchain_community.document_loaders import CSVLoader
 from langchain_core.documents import Document
 from src.pii import redact
 
-# ── Folder paths ──────────────────────────────────────────────────────────────
+# ── Folder paths 
 OPTION_A_DIR = "data/raw/option_a"
 OPTION_C_DIR = "data/raw/option_c"
 TICKETS_FILE = "data/tickets.csv"
 
 
-# ── Load markdown files ───────────────────────────────────────────────────────
+# load markdown files
 def load_markdown_files(folder: str, dataset: str) -> list:
     """
     Loads all .md files from a folder using plain file reading.
@@ -50,7 +50,7 @@ def load_markdown_files(folder: str, dataset: str) -> list:
     return docs
 
 
-# ── Load PDF files ────────────────────────────────────────────────────────────
+# ── Load PDF files 
 def load_pdf_files(folder: str, dataset: str) -> list:
     """
     Loads all .pdf files from a folder.
@@ -85,7 +85,7 @@ def load_pdf_files(folder: str, dataset: str) -> list:
     return docs
 
 
-# ── Load tickets CSV ──────────────────────────────────────────────────────────
+# load tickets csv file
 def load_tickets() -> list:
     """
     Loads data/tickets.csv.
@@ -122,7 +122,7 @@ def load_tickets() -> list:
     return docs
 
 
-# ── Load everything ───────────────────────────────────────────────────────────
+# load everything as document(all_docs)
 def load_all() -> list:
     """
     Loads all documents from Option A, Option C, and tickets.

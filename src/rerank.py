@@ -1,3 +1,4 @@
+import time
 import cohere
 from src.config import COHERE_API_KEY, TOP_N
 
@@ -27,6 +28,7 @@ def rerank(query: str, hits: list, top_n: int = None) -> list:
         top_n=top_n,
         model="rerank-english-v3.0",
     )
+    time.sleep(7)
 
     # Build reranked hits list
     reranked = []
