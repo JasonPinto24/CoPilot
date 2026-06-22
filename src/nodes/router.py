@@ -68,5 +68,4 @@ def route_decision(state: AgentState) -> str:
     valid = ["doc_search", "ticket_lookup", "summarizer"]
     if decision not in valid:
         decision = "doc_search"
-
     return decision

@@ -22,9 +22,9 @@ def ticket_lookup_node(state: AgentState) -> AgentState:
     client = get_qdrant_client()
 
     # Search ONLY tickets using metadata filter
-    results = client.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=query_vector,
+    results = client.query_points(
+    collection_name=COLLECTION_NAME,
+        query=query_vector,
         limit=TOP_K,
         query_filter=Filter(
             must=[
@@ -35,8 +35,7 @@ def ticket_lookup_node(state: AgentState) -> AgentState:
             ]
         ),
         with_payload=True,
-    )
-
+    ).points
     # Format hits
     hits = []
     for result in results:
