@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from src.graph import app as graph_app
 
 # ── FastAPI app ───────────────────────────────────────────────────────────────
-api = FastAPI(
+app = FastAPI(
     title="Enterprise Knowledge Copilot",
     description="RAG + LangGraph agent for internal IT knowledge",
     version="1.0.0"
@@ -22,13 +22,12 @@ class QuestionResponse(BaseModel):
 
 
 # ── POST /ask endpoint ────────────────────────────────────────────────────────
-@api.post("/ask", response_model=QuestionResponse)
+@app.post("/ask", response_model=QuestionResponse)
 async def ask(request: QuestionRequest):
     """
     Receives a question and returns a cited answer.
     Runs the full LangGraph agent pipeline.
     """
-    # Build initial state
     initial_state = {
         "query":       request.question,
         "messages":    [],
@@ -40,7 +39,6 @@ async def ask(request: QuestionRequest):
         "confidence":  0.0,
     }
 
-    # Run the graph
     result = graph_app.invoke(initial_state)
 
     return QuestionResponse(
@@ -51,7 +49,6 @@ async def ask(request: QuestionRequest):
 
 
 # ── Health check ──────────────────────────────────────────────────────────────
-@api.get("/health")
+@app.get("/health")
 async def health():
-    """Simple health check endpoint."""
     return {"status": "ok", "service": "Enterprise Knowledge Copilot"}

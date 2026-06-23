@@ -1,8 +1,8 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import chainlit as cl
-import httpx
-
-# ── FastAPI endpoint URL ──────────────────────────────────────────────────────
-API_URL = "http://localhost:8000/ask"
+from src.graph import app as graph_app
 
 
 # ── On chat start ─────────────────────────────────────────────────────────────
@@ -26,26 +26,23 @@ async def on_chat_start():
 async def on_message(message: cl.Message):
     question = message.content
 
+    # Build initial state
+    initial_state = {
+        "query":       question,
+        "messages":    [],
+        "tool_output": "",
+        "hits":        [],
+        "answer":      "",
+        "citations":   [],
+        "escalated":   False,
+        "confidence":  0.0,
+    }
+
     # Show thinking indicator
-    async with cl.Step(name="Searching knowledge base...") as step:
-        step.output = f"Processing: {question}"
+    async with cl.Step(name="Searching knowledge base..."):
+        # Run the full LangGraph agent directly
+        result = graph_app.invoke(initial_state)
 
-    # Call FastAPI endpoint
-    async with httpx.AsyncClient(timeout=120) as client:
-        try:
-            response = await client.post(
-                API_URL,
-                json={"question": question}
-            )
-            result = response.json()
-
-        except Exception as e:
-            await cl.Message(
-                content=f"Error connecting to the API: {e}"
-            ).send()
-            return
-
-    # Extract results
     answer    = result.get("answer", "No answer received")
     citations = result.get("citations", [])
     escalated = result.get("escalated", False)
@@ -53,10 +50,7 @@ async def on_message(message: cl.Message):
     # Show escalation warning
     if escalated:
         await cl.Message(
-            content=(
-                "⚠️ **Escalated to Human Support**\n\n"
-                f"{answer}"
-            ),
+            content=f"⚠️ **Escalated to Human Support**\n\n{answer}"
         ).send()
         return
 
