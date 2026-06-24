@@ -23,7 +23,7 @@ def ticket_lookup_node(state: AgentState) -> AgentState:
 
     # Search ONLY tickets using metadata filter
     results = client.query_points(
-        collection_name=COLLECTION_NAME,
+    collection_name=COLLECTION_NAME,
         query=query_vector,
         limit=TOP_K,
         query_filter=Filter(
@@ -36,7 +36,6 @@ def ticket_lookup_node(state: AgentState) -> AgentState:
         ),
         with_payload=True,
     ).points
-
     # Format hits
     hits = []
     for result in results:

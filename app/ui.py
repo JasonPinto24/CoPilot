@@ -2,7 +2,6 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import asyncio
 import chainlit as cl
 from src.graph import app as graph_app
 
@@ -41,10 +40,12 @@ async def on_message(message: cl.Message):
     }
 
     # Show thinking indicator
+    # Show thinking indicator
     async with cl.Step(name="Searching knowledge base..."):
+        import asyncio
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(
-            None,
+            None, 
             lambda: graph_app.invoke(initial_state)
         )
 
