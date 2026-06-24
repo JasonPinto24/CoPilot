@@ -1,6 +1,8 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import asyncio
 import chainlit as cl
 from src.graph import app as graph_app
 
@@ -40,8 +42,11 @@ async def on_message(message: cl.Message):
 
     # Show thinking indicator
     async with cl.Step(name="Searching knowledge base..."):
-        # Run the full LangGraph agent directly
-        result = graph_app.invoke(initial_state)
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            None,
+            lambda: graph_app.invoke(initial_state)
+        )
 
     answer    = result.get("answer", "No answer received")
     citations = result.get("citations", [])

@@ -1,7 +1,7 @@
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 from src.state import AgentState
 from src.embed_store import embed, get_qdrant_client
-from src.config import COLLECTION_NAME, TOP_K, ESCALATE_BELOW
+from src.config import COLLECTION_NAME, TOP_K
 
 # ── Ticket lookup node ────────────────────────────────────────────────────────
 def ticket_lookup_node(state: AgentState) -> AgentState:
@@ -22,9 +22,9 @@ def ticket_lookup_node(state: AgentState) -> AgentState:
     client = get_qdrant_client()
 
     # Search ONLY tickets using metadata filter
-    results = client.search(
+    results = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=query_vector,
+        query=query_vector,
         limit=TOP_K,
         query_filter=Filter(
             must=[
@@ -35,7 +35,7 @@ def ticket_lookup_node(state: AgentState) -> AgentState:
             ]
         ),
         with_payload=True,
-    )
+    ).points
 
     # Format hits
     hits = []
