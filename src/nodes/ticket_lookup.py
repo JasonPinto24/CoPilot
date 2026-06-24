@@ -1,7 +1,7 @@
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 from src.state import AgentState
 from src.embed_store import embed, get_qdrant_client
-from src.config import COLLECTION_NAME, TOP_K, ESCALATE_BELOW
+from src.config import COLLECTION_NAME, TOP_K
 
 # ── Ticket lookup node ────────────────────────────────────────────────────────
 def ticket_lookup_node(state: AgentState) -> AgentState:
